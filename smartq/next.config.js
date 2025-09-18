@@ -23,10 +23,6 @@ const nextConfig = {
     ],
   },
   experimental: {
-    // Allow cross-origin requests only in development
-    ...(process.env.NODE_ENV === 'development' && {
-      allowedDevOrigins: ['*'],
-    }),
     serverActions: {
       allowedOrigins: process.env.NODE_ENV === 'development' ? ['*'] : [process.env.NEXTAUTH_URL || 'http://localhost:3000'],
     },
