@@ -1,0 +1,206 @@
+Project: SmartQ Rebuild
+
+Goal:
+- Full implementation of SmartQ (salon queue management system).
+- Tech stack: Next.js (latest) + TypeScript + Tailwind CSS.
+- Backend / Auth / Database via Supabase.
+- UI/UX is **mobile-first**: look and feel like a mobile app, with performance & touch usability. Desktop support is secondary.
+- Codebase must be structured for easy deployment on Vercel, with minimal configuration needed later for custom domain, environment variables, secrets, etc.
+- Ensure **every** feature and flow from the original summary is implemented; **no functionality is omitted**.
+
+---
+
+## ✍️ Requirements / Functionality Checklist
+
+Each feature below must have UI, backend logic, database modeling, validation (client + server), error handling, and correct permission checks.
+
+1. **Authentication & User Management**
+   - Register new user via email + password.
+   - Email OTP verification on registration.
+   - SMS OTP verification if phone number is provided.
+   - Login via email/password; also allow password-less login / login via OTP (email or phone).
+   - Password reset via email.
+   - Roles: *Customer* and *Salon Owner* (optional Admin).
+   - Profile management: edit name, phone, profile pic, loyalty points, etc.
+   - Ensure email_verified, phone_verified flags.
+   - Use schema validation (e.g. Zod).
+   - Secure storage of passwords (Supabase handles, but any custom logic must be secure).
+
+2. **Database Schema & Data Models (Supabase Postgres)**
+   - Users: id (UUID), name, email, phone, role, loyalty_points, profile_picture_url, email_verified, phone_verified, created_at, updated_at.
+   - Salons: id, owner_id → Users, name, description, address (formatted), location (latitude, longitude), operating_hours (structured per day, possibly multiple intervals), salon_type (men / women / unisex), rating_avg, created_at, updated_at.
+   - Services: id, salon_id, name, description, price, duration (minutes), category, created_at, updated_at.
+   - Queues: id, customer_id, salon_id, service_ids (array if multiple), status (enum: waiting / in-progress / completed / no-show), position (or compute live), estimated_wait_time, joined_at, started_at, completed_at, no_show_at etc.
+   - Reviews: id, salon_id, customer_id, rating (numeric), comment, created_at, updated_at.
+   - SalonPhotos: id, salon_id, url or storage_key, metadata (uploaded_at etc.).
+   - Offers / Promotions: id, salon_id (nullable if global), title, description, discount_type (percentage / flat), discount_amount, valid_from, valid_to, terms, active_flag, created_at, updated_at.
+   - Favorites: user_id, salon_id.
+   - Analytics / Metrics: generate or store metrics like total customers served, average wait time, revenue per service, rating trends, no-shows etc.
+
+3. **Salon Owner Features**
+   - CRUD salon profile: create, edit, delete.
+   - Photo gallery: upload multiple photos, delete, replace. Use Supabase Storage or external provider; ensure optimization / thumbnails if possible.
+   - CRUD services: add, edit, delete services.
+   - Operating hours configuration: per day scheduling, possibly multiple time slots per day.
+   - View queue entries: waiting, in-progress, completed, no-show.
+   - **Update queue status**: transitions — waiting → in-progress → completed → no-show. Status change triggers should update database, UI, send notifications, reflect in real-time to customers.
+   - **Communication buttons**: For each queue entry, salon owner should have a **Call** button (tel: link or integrate calling service), and a **WhatsApp message** button (via WhatsApp Business API or Twilio — configurable template or custom message). These buttons visible only if customer has verified phone.
+   - Analytics Dashboard: for salon owner see daily customer count, revenue, average wait time, rating trends, popular services, show rate / no-show rate.
+
+4. **Customer Features**
+   - Discover salons: listings with filtering by salon type (men / women / unisex), services offered, rating, nearest distance.
+   - Search by name, by service type.
+   - Precise location display on map.
+   - View salon details: services, photos, map, operating hours, reviews, offers.
+   - Join queue: select one or more services; submit queue entry.
+   - View queue status: real-time updates of position, status, estimated wait time.
+   - Notifications on status change (in-app / optional email / SMS / WhatsApp).
+   - Leave or cancel queue before service start.
+   - After completion, submit review (rating + comment).
+   - Favorite salons.
+
+5. **Real-time & State Management**
+   - Real-time subscription / pushing of queue updates (status changes, position changes).
+   - Estimated wait time recalculated live based on queue ahead and service durations.
+   - Use Supabase’s real-time features or WebSocket if needed.
+   - UI state management: loading skeletons, error states, busy indicators etc.
+
+6. **Offers & Promotions**
+   - Owners can create, edit, delete offers.
+   - Offers can be salon-specific or global.
+   - Only active offers (based on valid_from / valid_to) appear in listings / detail pages.
+   - Offers visible on salon list page and salon detail page.
+
+7. **Reviews & Ratings**
+   - Customers leave reviews with rating + comment.
+   - Owners & public see reviews.
+   - Ratings aggregated: average rating shown in listings & detail views.
+   - Rating trends over time in owner analytics.
+
+8. **Photo / Gallery Management**
+   - Upload / delete / replace photos.
+   - Optimize / properly store images; ensure proper access control.
+   - Display gallery in salon detail.
+
+9. **Location & Search Features**
+   - Use **Google Maps JavaScript API + Places Autocomplete** to allow precise address entry by salon owner (and where applicable customer).
+     * Autocomplete input returns formatted address, address components (street, city, postal code, country), and geometry (latitude/longitude).
+     * Also allow map UI pin drop to fine-tune location.
+   - Show salon location on map in detail view using marker.
+   - Filtering by geospatial distance: nearest salons, salons within radius.
+   - Search functionality: by salon name, service type etc.
+
+10. **UI / UX Requirements**
+    - Mobile-first design: main experience on phone; layout, navigation suited for mobile (bottom tabs / drawer etc.).
+    - Desktop support good but secondary.
+    - Themability: salon type (men / women / unisex) dictates theme colors, imagery, banners etc.
+    - Loading states, skeleton screens; error messages.
+    - Accessibility: semantic HTML, good contrast, alt texts.
+    - Dark/light theme optional but design coherence required.
+
+11. **Routing & Pages / Screens**
+    - Home / Discover page (with filters by type, services, location, favorites).
+    - Auth pages: register, login, OTP verification (email + phone), forgot password.
+    - Profile page for user (customer) and owner.
+    - Salon detail page (public).
+    - Queue pages: join queue, view status, leave.
+    - Owner dashboard: salons management, services, offers, photo gallery, queue view, communication buttons, analytics.
+    - Favorites page.
+    - Reviews display.
+    - 404 / Not found page.
+
+12. **Security, Validation & Permissions**
+    - Protected routes: only logged-in users can access user pages.
+    - Owners only can manage their salons / services / offers etc.
+    - Users cannot view or manage others’ sensitive data.
+    - Input validation everywhere using schema validation (client & server).
+    - Error handling: proper HTTP status codes.
+    - Rate limiting on OTP / auth endpoints.
+    - Verification of phone/email before enabling communication features.
+
+13. **Deployment & Infrastructure**
+    - Ensure project structure and configs ready for Vercel deployment.
+    - Environment variables declared and documented (e.g. SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, GOOGLE_MAPS_API_KEY, Twilio credentials etc).
+    - Redirect / callback URLs for Supabase Auth set to support both development and production / custom domain.
+    - Supabase policies / row level security set appropriately.
+    - Real-time / storage features work in production / serverless environment.
+
+14. **Extras / Polishing**
+    - Loyalty points: accumulate per service or visit; display in profile.
+    - Multi-service booking per queue entry: durations summed for wait time.
+    - No-show handling: owner marks no-show; customer sees status.
+    - Theme adaptation by salon type (color, banners, services categories).
+    - Trending, nearest, rating filters etc.
+
+---
+
+## 🔄 Additional Required Functionalities to Include
+
+15. **Queue Communication & Status Updates**
+
+    - In the salon owner dashboard, for each customer in queue, provide UI buttons:
+      * **Call** — direct call to customer's verified phone (via tel: link or calling service).
+      * **WhatsApp message** — via WhatsApp Business API / Twilio; support templates or custom messages.
+    - Buttons visible only to salon owner and only if phone is verified.
+    - Ensure full status update flow: waiting → in-progress → completed → no-show. Each status change updates DB, UI, and triggers real-time updates and notifications.
+
+16. **Precise Location & Address Autocomplete**
+
+    - Use Google Maps JavaScript API + Places Autocomplete for address input by salon owner (and optionally by customer).
+    - Autocomplete should return full address components + geometry (lat/long).
+    - Also allow map UI (pin drop) for refining location.
+    - Save formatted address and lat/long in database.
+    - Use geospatial queries / distance calculations for nearest salons and radius filters.
+
+---
+
+## 🔧 Technical / Stack & Setup Spec
+
+- Next.js + TypeScript (App Router or Pages Router with good separation).
+- Tailwind CSS configured mobile-first.
+- Supabase:
+  * Auth (email/password + OTP via email + phone + optionally WhatsApp OTP via Twilio).
+  * Database (PostgreSQL) with schema above.
+  * Real-time features (subscriptions / channels) for queue updates.
+  * Storage for images.
+- Use Zod (or similar) for schema validation client & server.
+- State management: React Query or similar. Context API if needed (e.g. for theme/user).
+- Google Maps / Places Autocomplete / possible map library (e.g. `@react-google-maps/api`) for map & address features.
+- External messaging integration: Twilio or WhatsApp Business API for messaging and possibly SMS.
+- Image upload + optimization.
+
+---
+
+## 🚀 Vercel / Deployment & Project Structure Requirements
+
+- Clear folder layout: `app/` or `pages/`, `components/`, `hooks/`, `services/` or `lib/`, `styles/`, etc.
+- `.env.local.example` listing all needed env variables.
+- Build / start scripts in `package.json`.
+- `next.config.js` set up for production.
+- Auth redirect/callback URLs configured for production domain.
+- Real-time + storage integrations must work in Vercel / serverless env.
+- Custom domain support: no hard-coded domain; configuration ready.
+
+---
+
+## ✅ Deliverables to Generate First
+
+1. Project scaffold: folder structure + Next.js + Tailwind + Supabase setup + example `.env` file.
+2. Supabase schema SQL (or migration file) with all tables / relationships / row-level security policies.
+3. Sample components / pages:
+   - Auth flow: register + OTP (email + phone) + login + verification.
+   - Home / Discover + filter by salon type / services / location / favorites.
+   - Salon profile page: services, photos, reviews, offers, map.
+   - Queue interface: customer join queue + view status + leave.
+   - Owner dashboard queue row: status update + Call + WhatsApp + analytics.
+4. Example of address autocomplete input + map picker.
+5. State management example: real-time subscription for queue status / position.
+6. Styling / theme / mobile navigation sample (men/women/unisex theme).
+7. Instructions: how to run locally; Supabase project setup; Google Maps API key; Twilio/WhatsApp config; environment variables; deploying to Vercel; setting up custom domain; production settings.
+
+---
+
+## ⚙ Summary Statement
+
+“Implement SmartQ in full — authentication + OTPs (email, phone, WhatsApp), salon + service + queue + offers + reviews + gallery; precise address & maps; real-time updates; owner vs customer flows; communication (call / WhatsApp) functionality; mobile-first UI; theme adaptation by salon type; loyalty points; multi-service queue entries; readiness for Vercel deployment with custom domain.”
+
