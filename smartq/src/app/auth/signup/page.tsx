@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { authClient, authUtils } from '@/lib/auth'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -31,21 +32,45 @@ export default function SignupPage() {
       return
     }
 
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      setLoading(false)
+      return
+    }
+
     try {
-      // TODO: Implement Supabase authentication
-      console.log('Signup attempt:', formData)
-      
-      // Simulate signup for demo
-      setTimeout(() => {
+      const { user, error } = await authClient.signUp({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        role: formData.role
+      })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (user) {
+        // Check if email confirmation is required
+        if (!user.email_confirmed_at) {
+          setError('Please check your email and click the confirmation link to complete your registration.')
+          setLoading(false)
+          return
+        }
+
+        // Redirect based on user role
         if (formData.role === 'salon_owner') {
           router.push('/salon/dashboard')
         } else {
           router.push('/dashboard')
         }
-      }, 1000)
+      }
       
     } catch (err) {
-      setError('Failed to create account')
+      setError('An unexpected error occurred')
       setLoading(false)
     }
   }

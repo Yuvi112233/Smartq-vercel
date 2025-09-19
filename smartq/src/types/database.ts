@@ -10,6 +10,46 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          name: string
+          phone: string | null
+          role: 'customer' | 'salon_owner' | 'admin'
+          loyalty_points: number
+          profile_picture_url: string | null
+          email_verified: boolean
+          phone_verified: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          name: string
+          phone?: string | null
+          role?: 'customer' | 'salon_owner' | 'admin'
+          loyalty_points?: number
+          profile_picture_url?: string | null
+          email_verified?: boolean
+          phone_verified?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string
+          phone?: string | null
+          role?: 'customer' | 'salon_owner' | 'admin'
+          loyalty_points?: number
+          profile_picture_url?: string | null
+          email_verified?: boolean
+          phone_verified?: boolean
+          updated_at?: string
+        }
+      }
       users: {
         Row: {
           id: string
@@ -325,6 +365,7 @@ export interface Database {
 }
 
 // Helper types
+export type Profile = Database['public']['Tables']['profiles']['Row']
 export type User = Database['public']['Tables']['users']['Row']
 export type Salon = Database['public']['Tables']['salons']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
