@@ -276,6 +276,41 @@ export interface Database {
           salon_id?: string
         }
       }
+      otp_verifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          email: string | null;
+          phone: string | null;
+          otp_hash: string;
+          verification_type: 'email' | 'phone';
+          verified: boolean;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email?: string | null;
+          phone?: string | null;
+          otp_hash: string;
+          verification_type: 'email' | 'phone';
+          verified?: boolean;
+          created_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email?: string | null;
+          phone?: string | null;
+          otp_hash?: string;
+          verification_type?: 'email' | 'phone';
+          verified?: boolean;
+          created_at?: string;
+          expires_at?: string;
+        };
+      };
     }
     Views: {
       [_ in never]: never
