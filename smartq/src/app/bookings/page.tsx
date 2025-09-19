@@ -6,13 +6,33 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { Clock, MapPin, Star, Calendar, Users, Phone, MessageSquare, X } from 'lucide-react'
 
+interface Booking {
+  id: string;
+  salon: {
+    name: string;
+    address: string;
+    phone: string;
+    image: string;
+  };
+  services: string[];
+  totalPrice: number;
+  estimatedTime: number;
+  bookedAt: string;
+  status: 'waiting' | 'confirmed' | 'completed' | 'cancelled';
+  position: number | null;
+  estimatedWait: number | null;
+  queueId: string;
+  completedAt?: string;
+  rating?: number;
+}
+
 // Mock data
 const mockUser = {
   name: 'John Doe',
   role: 'customer' as const
 }
 
-const mockBookings = [
+const mockBookings: Booking[] = [
   {
     id: '1',
     salon: {
@@ -86,7 +106,7 @@ const mockBookings = [
 ]
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState(mockBookings)
+  const [bookings, setBookings] = useState<Booking[]>(mockBookings)
   const [filter, setFilter] = useState('all')
 
   const filteredBookings = bookings.filter(booking => {
@@ -105,11 +125,20 @@ export default function BookingsPage() {
   }
 
   const handleRateBooking = (bookingId: string, rating: number) => {
-    setBookings(prev => prev.map(booking => 
-      booking.id === bookingId 
-        ? { ...booking, rating, position: null, estimatedWait: null, completedAt: new Date().toISOString(), status: 'completed' }
-        : booking
-    ))
+    setBookings(prev => prev.map(booking => {
+      if (booking.id === bookingId) {
+        const updatedBooking: Booking = {
+          ...booking,
+          rating,
+          position: null,
+          estimatedWait: null,
+          completedAt: new Date().toISOString(),
+          status: 'completed'
+        };
+        return updatedBooking;
+      }
+      return booking;
+    }))
   }
 
   const getStatusColor = (status: string) => {
