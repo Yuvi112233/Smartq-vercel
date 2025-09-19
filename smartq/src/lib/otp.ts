@@ -3,6 +3,7 @@
 
 import crypto from 'crypto'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import type { Database } from '@/types/database'
 
 // Generate a secure 6-digit OTP
 export function generateOTP(): string {
@@ -36,7 +37,7 @@ export async function storeOTP(
     throw new Error('storeOTP can only be called on the server side')
   }
 
-  const supabase = createServiceRoleClient()
+  const supabase = createServiceRoleClient() as any
   const otp = generateOTP()
   const context = `${userId}:${verificationType}`
   const otpHash = hashOTP(otp, context)
@@ -45,7 +46,7 @@ export async function storeOTP(
     // First, invalidate any existing active OTPs for this user/type
     await supabase
       .from('otp_verifications')
-      .update({ verified: true }) // Mark as verified to break uniqueness constraint
+      .update({ verified: true })
       .eq('user_id', userId)
       .eq('verification_type', verificationType)
       .eq('verified', false)
@@ -88,7 +89,7 @@ export async function verifyOTP(
     throw new Error('verifyOTP can only be called on the server side')
   }
 
-  const supabase = createServiceRoleClient()
+  const supabase = createServiceRoleClient() as any
   const context = `${userId}:${verificationType}`
 
   try {
@@ -147,7 +148,7 @@ export async function cleanupExpiredOTPs(): Promise<void> {
     throw new Error('cleanupExpiredOTPs can only be called on the server side')
   }
 
-  const supabase = createServiceRoleClient()
+  const supabase = createServiceRoleClient() as any
   
   await supabase
     .from('otp_verifications')
