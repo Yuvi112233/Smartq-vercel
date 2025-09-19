@@ -107,7 +107,7 @@ export default function BookingsPage() {
   const handleRateBooking = (bookingId: string, rating: number) => {
     setBookings(prev => prev.map(booking => 
       booking.id === bookingId 
-        ? { ...booking, rating }
+        ? { ...booking, rating, position: null, estimatedWait: null, completedAt: new Date().toISOString(), status: 'completed' }
         : booking
     ))
   }
